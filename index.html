@@ -1,188 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Llamada Directa</title>
-  <link rel="manifest" href="/manifest.json">
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-      margin: 0;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 40px;
-      min-height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Llamada Directa</title>
 
-    .contacto {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(12px);
-      border-radius: 20px;
-      overflow: hidden;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      width: 280px;
-      margin: auto;
-    }
+<style>
+body{
+  font-family: Arial;
+  background: linear-gradient(135deg,#74ebd5,#ACB6E5);
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:20px;
+  padding:20px;
+}
 
-    .contacto:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 14px 30px rgba(0,0,0,0.4);
-    }
+.contacto{
+  width:280px;
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 5px 15px rgba(0,0,0,.2);
+  text-align:center;
+}
 
-    .foto {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      display: block;
-    }
+.foto{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
 
-    .nombre {
-      font-size: 1.6em;
-      margin: 15px 0;
-      font-weight: 600;
-      color: #fff;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-    }
+.nombre{
+  font-size:20px;
+  font-weight:bold;
+  margin:15px;
+}
 
-    .btn-llamar {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 14px 35px;
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #fff;
-      background: linear-gradient(45deg, #00c853, #00e676);
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      text-decoration: none;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-      transition: transform 0.2s ease, background 0.3s ease;
-    }
-
-    .btn-llamar:hover {
-      transform: scale(1.1);
-      background: linear-gradient(45deg, #00b248, #00c853);
-    }
-
-    .btn-llamar:active {
-      transform: scale(0.95);
-    }
-
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        gap: 30px;
-      }
-    }
-  </style>
+.btn{
+  display:inline-block;
+  margin-bottom:20px;
+  padding:10px 25px;
+  background:green;
+  color:white;
+  text-decoration:none;
+  border-radius:50px;
+}
+</style>
 </head>
 <body>
-  <!-- Contactos -->
-  <div class="contacto">
-    <img src="imagen/danilo.jpg" alt="Foto de Danilo" class="foto">
-    <div class="nombre">Danilo</div>
-    <a href="tel:+573008250888" class="btn-llamar">📞 LLAMAR</a>
-  </div>
 
-  <div class="contacto">
-    <img src="imagen/yordy.jpg" alt="Foto de Yordy" class="foto">
-    <div class="nombre">Yordy</div>
-    <a href="tel:+573223891369" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+<div id="contenedor"></div>
 
-  <div class="contacto">
-    <img src="imagen/nafer.jpg" alt="Foto de Nafer" class="foto">
-    <div class="nombre">Nafer</div>
-    <a href="tel:+573205356646" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-    
-  <div class="contacto">
-    <img src="imagen/dina.jpg" alt="Foto de Dina" class="foto">
-    <div class="nombre">Dina</div>
-    <a href="tel:+573233734399" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-  
-  <div class="contacto">
-    <img src="imagen/yuli.jpg" alt="Foto de Yuli" class="foto">
-    <div class="nombre">Yuli</div>
-    <a href="tel:+573016089118" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+<script>
+const API_URL = "TU_URL_DE_APPS_SCRIPT";
 
-  <div class="contacto">
-    <img src="imagen/jose.jpg" alt="Foto de Joselito" class="foto">
-    <div class="nombre">Joselito</div>
-    <a href="tel:+573014081834" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-  
-  <div class="contacto">
-    <img src="imagen/estaban.jpg" alt="Foto de Esteban" class="foto">
-    <div class="nombre">Esteban</div>
-    <a href="tel:+573122901474" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+async function cargarContactos() {
+  try {
+    const res = await fetch(API_URL);
+    const contactos = await res.json();
 
-  <div class="contacto">
-    <img src="imagen/eduar.jpg" alt="Foto de Eduar" class="foto">
-    <div class="nombre">Eduar</div>
-    <a href="tel:+573246860695" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+    const contenedor = document.getElementById("contenedor");
+    contenedor.innerHTML = "";
 
-  <div class="contacto">
-    <img src="imagen/duvan.jpg" alt="Foto de Duvan" class="foto">
-    <div class="nombre">Duvan</div>
-    <a href="tel:+573225336251" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+    contactos.forEach(contacto => {
+      contenedor.innerHTML += `
+        <div class="contacto">
+          <img src="${contacto.imagen}" class="foto">
+          <div class="nombre">${contacto.nombre}</div>
+          <a href="tel:+57${contacto.telefono}" class="btn">
+            📞 LLAMAR
+          </a>
+        </div>
+      `;
+    });
 
-  <div class="contacto">
-    <img src="imagen/yeli.jpg" alt="Foto de Yelis" class="foto">
-    <div class="nombre">Yelis</div>
-    <a href="tel:+573113937988" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-  
-  <div class="contacto">
-    <img src="imagen/lenis.jpg" alt="Foto de Lenis" class="foto">
-    <div class="nombre">Lenis</div>
-    <a href="tel:+573003350692" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-    
-  <div class="contacto">
-    <img src="imagen/nuvis.jpg" alt="Foto de Nuvis" class="foto">
-    <div class="nombre">Nuvis</div>
-    <a href="tel:+573005580090" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+  } catch(error){
+    console.log(error);
+  }
+}
 
-  <div class="contacto">
-    <img src="imagen/tibu.jpg" alt="Foto de Tiburcio" class="foto">
-    <div class="nombre">Tiburcio</div>
-    <a href="tel:+573234908791" class="btn-llamar">📞 LLAMAR</a>
-  </div>
+cargarContactos();
+</script>
 
-  <div class="contacto">
-    <img src="imagen/buena.png" alt="Foto de Buena" class="foto">
-    <div class="nombre">Buena</div>
-    <a href="tel:+573113598449" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-
-  <div class="contacto">
-    <img src="imagen/elor.jpg" alt="Foto de Elor" class="foto">
-    <div class="nombre">Elor</div>
-    <a href="tel:+573015545364" class="btn-llamar">📞 LLAMAR</a>
-  </div>
-
-  <!-- Registro de Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log('✅ Service Worker registrado'))
-        .catch(err => console.log('❌ Error en SW:', err));
-    }
-  </script>
 </body>
 </html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin</title>
+</head>
+<body>
+
+<input type="text" id="nombre" placeholder="Nombre">
+<input type="text" id="telefono" placeholder="Telefono">
+<input type="file" id="imagen">
+
+<button onclick="subir()">Guardar</button>
+
+<p id="mensaje"></p>
+
+<script>
+async function subir() {
+    const nombre = document.getElementById("nombre").value;
+    const telefono = document.getElementById("telefono").value;
+    const file = document.getElementById("imagen").files[0];
+    const mensaje = document.getElementById("mensaje");
+
+    try {
+        mensaje.innerHTML = "Subiendo imagen...";
+
+        // CLOUDINARY
+        let formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "contactos_app");
+
+        const cloudRes = await fetch(
+            "https://api.cloudinary.com/v1_1/dm2q4hcus/image/upload",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const cloudData = await cloudRes.json();
+
+        const imagenURL = cloudData.secure_url;
+
+        mensaje.innerHTML = "Guardando en Google Sheets...";
+
+        const scriptURL =
+        "https://script.google.com/macros/s/AKfycbyX66TiZaZcDpDXLn7pYEr6WdZOYQtj9Gq3AuT4uBj0KzTUkqysZSKKLaD6R4XieweY/exec";
+
+        // Enviar al Apps Script (CRUD: create)
+        const finalURL = `${scriptURL}?action=create&nombre=${encodeURIComponent(nombre)}&telefono=${encodeURIComponent(telefono)}&imagen=${encodeURIComponent(imagenURL)}`;
+        window.open(finalURL, "_blank");
+
+        mensaje.innerHTML = "✅ Guardado correctamente";
+
+    } catch(error) {
+        console.log(error);
+        mensaje.innerHTML = "❌ Error";
+    }
+}
+</script>
+
+</body>
+</html>

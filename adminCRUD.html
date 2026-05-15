@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin CRUD</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;max-width:1100px;margin:20px auto;padding:0 16px;}
+    input,button{padding:10px;margin:6px 0;}
+    table{border-collapse:collapse;width:100%;margin-top:16px;}
+    th,td{border:1px solid #ddd;padding:8px;}
+    th{background:#f4f4f4;}
+    img{max-width:80px;max-height:60px;object-fit:cover;}
+    .row{display:flex;gap:12px;flex-wrap:wrap;}
+    .col{flex:1;min-width:220px;}
+    .btn-danger{background:#d9534f;color:#fff;border:0;cursor:pointer;}
+    .btn{background:#2d7d46;color:#fff;border:0;cursor:pointer;}
+    .btn-secondary{background:#555;color:#fff;border:0;cursor:pointer;}
+    .muted{color:#666;}
+    .hidden{display:none;}
+  </style>
+</head>
+<body>
+  <h2>Panel Admin - CRUD Google Sheets</h2>
+  <p class="muted">Pega aquí el listado desde Apps Script y administra registros.</p>
+
+  <div class="row">
+    <div class="col">
+      <h3 id="modeTitle">Crear</h3>
+      <input type="hidden" id="id" />
+      <input id="nombre" placeholder="Nombre" />
+      <input id="telefono" placeholder="Telefono" />
+      <input type="file" id="imagen" />
+      <div>
+        <button class="btn" id="btnCreate" onclick="createNow()">Crear</button>
+        <button class="btn-secondary hidden" id="btnUpdate" onclick="updateNow()">Actualizar</button>
+        <button class="btn-secondary" onclick="resetForm()">Cancelar</button>
+      </div>
+      <p id="mensaje"></p>
+    </div>
+  </div>
+
+  <h3>Contactos</h3>
+  <button class="btn-secondary" onclick="loadList()">Recargar</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Imagen</th>
+        <th>Nombre</th>
+        <th>Telefono</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+<script>
+  // ====== CONFIG ======
+  const scriptURL = "https://script.google.com/macros/s/AKfycbyX66TiZaZcDpDXLn7pYEr6WdZOYQtj9Gq3AuT4uBj0KzTUkqysZSKKLaD6R4XieweY/exec"; // termina en /exec
+
+  // Cloudinary
+  const CLOUDINARY_UPLOAD_PRESET = "contactos_app";
+  const CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/dm2q4hcus/image/upload";
+
+  // ====== helpers ======
+  const $ = (id)=>document.getElementById(id);
+
+  function setModeCreate(){
+    $("modeTitle").textContent = "Crear";
+    $("btnCreate").classList.remove("hidden");
+    $("btnUpdate").classList.add("hidden");
+  }
+
+  function setModeUpdate(){
+    $("modeTitle").textContent = "Actualizar";
+    $("btnCreate").classList.add("hidden");
+    $("btnUpdate").classList.remove("hidden");
+  }
+
+  function resetForm(){
+    $("id").value = "";
+    $("nombre").value = "";
+    $("telefono").value = "";
+    $("imagen").value = "";
+    $("mensaje").textContent = "";
+    setModeCreate();
+  }
+
+  async function uploadToCloudinary(){
+    const file = $("imagen").files[0];
+    if(!file) return "";
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(CLOUDINARY_UPLOAD_URL,{method:"POST",body:fd});
+    const data = await res.json();
+    return data.secure_url;
+  }
+
+  function buildURL(params){
+    const qs = new URLSearchParams(params);
+    return scriptURL + "?" + qs.toString();
+  }
+
+  async function api(action, params){
+    const url = buildURL({ ...params, action });
+    const res = await fetch(url);
+    const text = await res.text();
+    try{ return JSON.parse(text); }catch{ return { ok:false, error:text }; }
+  }
+
+  async function loadList(){
+    $("tbody").innerHTML = "";
+    $("mensaje").textContent = "Cargando...";
+    const out = await api("list", {});
+    if(!out.ok){ $("mensaje").textContent = out.error || "Error"; return; }
+
+    const data = out.data || [];
+    $("tbody").innerHTML = data.map(r => `
+      <tr>
+        <td>${r.id}</td>
+        <td>${r.imagen ? `<img src="${r.imagen}" />` : ""}</td>
+        <td>${r.nombre || ""}</td>
+        <td>${r.telefono || ""}</td>
+        <td>
+          <button class="btn" onclick="editRow('${r.id}')">Editar</button>
+          <button class="btn-danger" onclick="deleteRow('${r.id}')">Eliminar</button>
+        </td>
+      </tr>
+    `).join("");
+
+    $("mensaje").textContent = "";
+  }
+
+  function editRow(id){
+    // encuentra registro visible
+    const tr = [...$("tbody").children].find(x => x.children[0].textContent === id);
+    if(!tr) return;
+
+    const nombre = tr.children[2].textContent;
+    const telefono = tr.children[3].textContent;
+
+    $("id").value = id;
+    $("nombre").value = nombre;
+    $("telefono").value = telefono;
+
+    // No cambiamos imagen si no seleccionas una nueva.
+    setModeUpdate();
+  }
+
+  async function createNow(){
+    const nombre = $("nombre").value.trim();
+    const telefono = $("telefono").value.trim();
+    if(!nombre || !telefono){ $("mensaje").textContent = "Completa nombre y telefono"; return; }
+
+    $("mensaje").textContent = "Subiendo imagen y creando...";
+    const imagen = await uploadToCloudinary();
+
+    // create: imagen puede venir vacía si no subes
+    const out = await api("create", { nombre, telefono, imagen });
+    if(!out.ok){ $("mensaje").textContent = out.error || "Error"; return; }
+
+    $("mensaje").textContent = "Creado ✅";
+    resetForm();
+    await loadList();
+  }
+
+  async function updateNow(){
+    const id = $("id").value;
+    const nombre = $("nombre").value.trim();
+    const telefono = $("telefono").value.trim();
+    if(!id){ $("mensaje").textContent = "Selecciona un registro"; return; }
+    if(!nombre || !telefono){ $("mensaje").textContent = "Completa nombre y telefono"; return; }
+
+    $("mensaje").textContent = "Actualizando...";
+    const imagen = await uploadToCloudinary(); // si no eliges archivo, devuelve "" (y lo mandamos)
+
+    const out = await api("update", { id, nombre, telefono, imagen });
+    if(!out.ok){ $("mensaje").textContent = out.error || "Error"; return; }
+
+    $("mensaje").textContent = "Actualizado ✅";
+    resetForm();
+    await loadList();
+  }
+
+  async function deleteRow(id){
+    if(!confirm("¿Eliminar el registro ID="+id+"?")) return;
+    $("mensaje").textContent = "Eliminando...";
+    const out = await api("delete", { id });
+    if(!out.ok){ $("mensaje").textContent = out.error || "Error"; return; }
+    $("mensaje").textContent = "Eliminado ✅";
+    await loadList();
+  }
+
+  // init
+  resetForm();
+  loadList();
+</script>
+</body>
+</html>
+

@@ -37,6 +37,10 @@ self.addEventListener("activate", event => {
 
 // Interceptar requests
 self.addEventListener("fetch", event => {
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(resp => resp || fetch(event.request))
   );
