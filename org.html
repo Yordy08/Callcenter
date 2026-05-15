@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contactos</title>
+
+<style>
+body{
+  font-family: Arial;
+  background: linear-gradient(135deg,#74ebd5,#ACB6E5);
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+  padding:20px;
+  justify-content:center;
+}
+
+.card{
+  width:280px;
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 5px 15px rgba(0,0,0,.2);
+  text-align:center;
+}
+
+.card img{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+.nombre{
+  font-size:20px;
+  font-weight:bold;
+  margin:10px;
+}
+
+.btn{
+  display:inline-block;
+  margin:15px;
+  padding:10px 25px;
+  background:green;
+  color:white;
+  text-decoration:none;
+  border-radius:50px;
+}
+</style>
+</head>
+
+<body>
+  <h1>contactos</h1>
+
+<div id="contenedor"></div>
+
+<script>
+
+// MISMA URL DEL CRUD
+const scriptURL =
+"https://script.google.com/macros/s/AKfycbziUmZrBavBkQMHOqCSDgoqW-0W2X7-Yh5GOpqpkKMeQdiE7EvDDBawP8di5YRAzCQB/exec";
+
+function loadList(){
+
+    // igual que CRUD
+    const old = document.getElementById("jsonp");
+    if(old) old.remove();
+
+    const script = document.createElement("script");
+    script.id = "jsonp";
+
+    script.src = `${scriptURL}?action=list&callback=renderContacts`;
+
+    document.body.appendChild(script);
+}
+
+function renderContacts(data){
+
+    const contenedor = document.getElementById("contenedor");
+    contenedor.innerHTML = "";
+
+    data.forEach(c => {
+
+        contenedor.innerHTML += `
+        <div class="card">
+          <img src="${c.imagen}">
+          <div class="nombre">${c.nombre}</div>
+
+          <a class="btn" href="tel:+57${c.telefono}">
+            📞 LLAMAR
+          </a>
+        </div>`;
+    });
+}
+
+// iniciar
+loadList();
+
+</script>
+
+</body>
+</html>

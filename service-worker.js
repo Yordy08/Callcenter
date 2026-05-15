@@ -1,47 +1,62 @@
-const CACHE_NAME = "llamada-directa-v1";
-const urlsToCache = [
-  "/",
-  "/index.html",
-  "/imagen/danilo.jpg",
-  "/imagen/yordy.jpg",
-  "/imagen/nafer.jpg",
-  "/imagen/dina.jpg",
-  "/imagen/yuli.jpg",
-  "/imagen/jose.jpg",
-  "/imagen/estaban.jpg",
-  "/imagen/eduar.jpg",
-  "/imagen/duvan.jpg",
-  "/imagen/yeli.jpg",
-  "/imagen/lenis.jpg",
-  "/imagen/nuvis.jpg",
-  "/imagen/tibu.jpg",
-  "/imagen/buena.png",
-  "/imagen/elor.jpg"
-];
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `callcenter-cache-${CACHE_VERSION}`;
 
-// Instalar y guardar en caché
-self.addEventListener("install", event => {
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
-// Activar y limpiar cachés viejos
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-});
+function isNavigationRequest(request) {
+  return request.mode === 'navigate' || (request.destination === '' && request.method === 'GET');
+}
 
-// Interceptar requests
-self.addEventListener("fetch", event => {
-  if (!event.request.url.startsWith(self.location.origin)) {
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  // For navigations (HTML), go network-first to reflect changes quickly.
+  if (isNavigationRequest(request)) {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(request);
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, fresh.clone());
+          return fresh;
+        } catch (err) {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          throw err;
+        }
+      })()
+    );
     return;
   }
 
+  // For everything else: cache-first.
   event.respondWith(
-    caches.match(event.request).then(resp => resp || fetch(event.request))
+    (async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+
+      const fresh = await fetch(request);
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, fresh.clone()).catch(() => {});
+      return fresh;
+    })()
   );
 });
+
