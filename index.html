@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contactos</title>
 
-<link rel="icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp" sizes="512x512" type="image/png">
-<link rel="apple-touch-icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp" sizes="512x512" type="image/png">
+<link rel="icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp">
+<link rel="apple-touch-icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp">
 <meta name="theme-color" content="#00c853">
 
 <style>
@@ -26,7 +26,6 @@ header{
   backdrop-filter:blur(10px);
 }
 
-/* MENU BTN */
 .menu-btn{
   font-size:22px;
   cursor:pointer;
@@ -159,6 +158,13 @@ header{
   border-radius:50px;
   text-decoration:none;
 }
+
+.loading{
+  text-align:center;
+  padding:30px;
+  font-size:18px;
+  color:white;
+}
 </style>
 </head>
 
@@ -192,17 +198,18 @@ header{
   <button class="menu-btn" onclick="openMenu()">☰</button>
 </header>
 
-<!-- CONTENEDOR -->
+<div class="loading" id="loading">
+  Cargando contactos...
+</div>
+
 <div id="contenedor"></div>
 
 <script>
-
 let menuUnlocked = false;
 let loginTimer = null;
 
-/* ABRIR MENÚ */
+/* MENU */
 function openMenu(){
-
   if(menuUnlocked){
     showMenu();
     return;
@@ -219,9 +226,7 @@ function openMenu(){
   }, 5000);
 }
 
-/* LOGIN */
 function checkMenu(){
-
   const pass = document.getElementById("pass").value;
 
   if(pass === "admin"){
@@ -229,90 +234,126 @@ function checkMenu(){
 
     clearTimeout(loginTimer);
     document.getElementById("menuLogin").style.display = "none";
-
     showMenu();
+
   }else{
     document.getElementById("error").innerText = "Contraseña incorrecta";
   }
 }
 
-/* CERRAR LOGIN */
 function closeLogin(){
   document.getElementById("menuLogin").style.display = "none";
   document.getElementById("error").innerText = "";
   clearTimeout(loginTimer);
 }
 
-/* MOSTRAR MENU */
 function showMenu(){
   document.getElementById("sidebar").style.left = "0";
   document.getElementById("overlay").style.display = "block";
 }
 
-/* CERRAR MENU */
 function closeMenu(){
   document.getElementById("sidebar").style.left = "-260px";
   document.getElementById("overlay").style.display = "none";
 }
 
-/* API */
+/* =========================
+   API
+========================= */
+
 const scriptURL =
-"https://script.google.com/macros/s/AKfycbyOQE2yO6X6oT7mR3Yf4B1eUNUayjyUmvZSejTp-9TACBLSvP6uNF0LWYWU0Bzub7RC/exec";
+"https://script.google.com/macros/s/AKfycbxCOhWQ4FkMckemEFyKaR6WLyJEXcHafbhyGdBXixL5s28DkuHMkK29jiGKG0jeybm9/exec";
 
-const CONTACTS_CACHE_KEY = 'contacts_cache_v1';
+const CONTACTS_CACHE_KEY = "contacts_cache_v3";
 
+/* cargar lista */
 function loadList(){
-  // 1) Mostrar desde caché local inmediatamente (sirve para “sin internet”)
+
+  document.getElementById("loading").style.display = "block";
+
+  // mostrar cache local primero
   const cached = localStorage.getItem(CONTACTS_CACHE_KEY);
+
   if(cached){
     try{
       renderContacts(JSON.parse(cached));
-    }catch(e){}
+    }catch(e){
+      console.log(e);
+    }
   }
 
-  // 2) Intentar cargar desde Google (si hay internet)
+  // sincronizar online
   syncNow();
 }
 
 
+/* JSONP SIN CORS */
 function syncNow(){
-  if(!navigator.onLine) return;
 
-  const url = `${scriptURL}?action=list&nocache=${Date.now()}`;
+  if(!navigator.onLine){
+    document.getElementById("loading").style.display = "none";
+    return;
+  }
 
-  // Evitar caché vieja en fetch (y forzar revalidación)
-  fetch(url, { cache: 'no-store' })
-    .then(res => {
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    })
-    .then(payload => {
-      // tu backend devuelve {ok:true,data:[...]}
-      if(payload && payload.ok && payload.data){
-        renderContacts(payload.data);
-        return;
-      }
-      renderContacts(payload);
-    })
-    .catch(() => {
-      // si falla dejamos lo que ya se mostró desde localStorage
-    });
+  const oldScript = document.getElementById("jsonpScript");
+
+  if(oldScript){
+    oldScript.remove();
+  }
+
+  const script = document.createElement("script");
+  script.id = "jsonpScript";
+
+  script.src =
+    `${scriptURL}?action=list` +
+    `&callback=handleContacts` +
+    `&nocache=${Date.now()}`;
+
+  script.onerror = function(){
+    console.log("Error cargando datos");
+    document.getElementById("loading").style.display = "none";
+  };
+
+  document.body.appendChild(script);
 }
 
 
+/* respuesta JSONP */
+function handleContacts(data){
+  renderContacts(data);
+  document.getElementById("loading").style.display = "none";
+}
+
+
+/* render */
 function renderContacts(data){
-  // Guardar para offline
+
   try{
-    localStorage.setItem(CONTACTS_CACHE_KEY, JSON.stringify(data));
-  }catch(e){}
+    localStorage.setItem(
+      CONTACTS_CACHE_KEY,
+      JSON.stringify(data)
+    );
+  }catch(e){
+    console.log(e);
+  }
 
   const contenedor = document.getElementById("contenedor");
   contenedor.innerHTML = "";
 
+  if(!data || !data.length){
+    contenedor.innerHTML = `
+      <div class="loading">
+        No hay contactos registrados
+      </div>
+    `;
+    return;
+  }
+
   data.forEach(c => {
     contenedor.innerHTML += `
       <div class="card">
-        <img src="${c.imagen}">
+        <img src="${c.imagen}" alt="${c.nombre}">
+        
         <div class="info">
           <div class="nombre">${c.nombre}</div>
           <div class="telefono">${c.telefono}</div>
@@ -326,18 +367,26 @@ function renderContacts(data){
   });
 }
 
-loadList();
 
-// Registrar Service Worker para evitar código/recursos viejos
+/* cuando vuelve internet */
+window.addEventListener("online", () => {
+  syncNow();
+});
+
+
+/* actualizar service worker */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.update());
+  });
 }
 
-window.addEventListener('online', () => syncNow());
 
+/* iniciar */
+window.onload = function(){
+  loadList();
+};
 </script>
-
 
 </body>
 </html>
-
