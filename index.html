@@ -328,10 +328,11 @@ function renderContacts(data){
 
 loadList();
 
-// Registrar Service Worker para evitar código/recursos viejos
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js').catch(() => {});
-}
+// Service Worker desactivado temporalmente (fix urgente para Chrome)
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('service-worker.js').catch(() => {});
+// }
+
 
 window.addEventListener('online', () => syncNow());
 
