@@ -45,7 +45,7 @@ async function subir() {
         mensaje.innerHTML = "Guardando en Google Sheets...";
 
         const scriptURL =
-        "https://script.google.com/macros/s/AKfycbzG_-eo_1_3FnuDW7uox4YoVY4JVRF8zzdj6Qk_A6_wD8nV3qcLZet0WUQaBgdRkg7A/exec";
+        "https://script.google.com/macros/s/AKfycbxCOhWQ4FkMckemEFyKaR6WLyJEXcHafbhyGdBXixL5s28DkuHMkK29jiGKG0jeybm9/exec";
 
         // Enviar al Apps Script (CRUD: create)
         const finalURL = `${scriptURL}?action=create&nombre=${encodeURIComponent(nombre)}&telefono=${encodeURIComponent(telefono)}&imagen=${encodeURIComponent(imagenURL)}`;
