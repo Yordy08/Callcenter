@@ -259,25 +259,41 @@ function closeMenu(){
 const scriptURL =
 "https://script.google.com/macros/s/AKfycbziUmZrBavBkQMHOqCSDgoqW-0W2X7-Yh5GOpqpkKMeQdiE7EvDDBawP8di5YRAzCQB/exec";
 
-function loadList(){
+const CONTACTS_CACHE_KEY = 'contacts_cache_v1';
 
+function loadList(){
+  // 1) Mostrar desde caché local inmediatamente (sirve para “sin internet”)
+  const cached = localStorage.getItem(CONTACTS_CACHE_KEY);
+  if(cached){
+    try{
+      renderContacts(JSON.parse(cached));
+    }catch(e){}
+  }
+
+  // 2) Intentar cargar desde Google (cuando Chrome lo permita)
   const old = document.getElementById("jsonp");
   if(old) old.remove();
 
   const script = document.createElement("script");
   script.id = "jsonp";
   script.src = `${scriptURL}?action=list&callback=renderContacts`;
+  script.onerror = () => {
+    // Si falla, dejamos lo que ya se mostró desde caché.
+  };
 
   document.body.appendChild(script);
 }
 
 function renderContacts(data){
+  // Guardar para offline
+  try{
+    localStorage.setItem(CONTACTS_CACHE_KEY, JSON.stringify(data));
+  }catch(e){}
 
   const contenedor = document.getElementById("contenedor");
   contenedor.innerHTML = "";
 
   data.forEach(c => {
-
     contenedor.innerHTML += `
       <div class="card">
         <img src="${c.imagen}">
