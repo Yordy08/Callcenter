@@ -7,156 +7,71 @@
 
 <link rel="icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp" sizes="512x512" type="image/png">
-<meta name="theme-color" content="#00c853">
+</div>
 
-<style>
-body{
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
-}
+<script>
+let menuUnlocked = false;
+let loginTimer = null;
 
-/* HEADER */
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 20px;
-  background:rgba(255,255,255,0.25);
-  backdrop-filter:blur(10px);
-}
+/* ABRIR MENÚ */
+function openMenu(){
 
-/* MENU BTN */
-.menu-btn{
-  font-size:22px;
-  cursor:pointer;
-  background:white;
-  border:none;
-  padding:10px 14px;
-  border-radius:10px;
-}
+  if(menuUnlocked){
+    showMenu();
+    return;
+  }
 
-/* SIDEBAR */
-.sidebar{
-  position:fixed;
-  top:0;
-  left:-260px;
-  width:250px;
-  height:100%;
-  background:#111;
-  padding-top:60px;
-  transition:0.3s;
-  z-index:1000;
-}
+  document.getElementById("menuLogin").style.display = "flex";
+  document.getElementById("pass").value = "";
+  document.getElementById("error").innerText = "";
 
-.sidebar a{
-  display:block;
-  padding:15px;
-  color:white;
-  text-decoration:none;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-}
+  clearTimeout(loginTimer);
 
-.sidebar a:hover{
-  background:#28a745;
-}
-
-/* OVERLAY */
-.overlay{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  z-index:999;
+  loginTimer = setTimeout(() => {
+    closeLogin();
+  }, 5000);
 }
 
 /* LOGIN */
-#menuLogin{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.85);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:2000;
+function checkMenu(){
+
+  const pass = document.getElementById("pass").value;
+
+  if(pass === "admin"){
+    menuUnlocked = true;
+
+    clearTimeout(loginTimer);
+    document.getElementById("menuLogin").style.display = "none";
+
+    showMenu();
+  }else{
+    document.getElementById("error").innerText = "Contraseña incorrecta";
+  }
 }
 
-.box{
-  background:white;
-  padding:25px;
-  border-radius:15px;
-  text-align:center;
-  width:260px;
+/* CERRAR LOGIN */
+function closeLogin(){
+  document.getElementById("menuLogin").style.display = "none";
+  document.getElementById("error").innerText = "";
+  clearTimeout(loginTimer);
 }
 
-.box input{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+/* MOSTRAR MENU */
+function showMenu(){
+  document.getElementById("sidebar").style.left = "0";
+  document.getElementById("overlay").style.display = "block";
 }
 
-.box button{
-  margin-top:10px;
-  width:100%;
-  padding:10px;
-  background:green;
-  color:white;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
+/* CERRAR MENU */
+function closeMenu(){
+  document.getElementById("sidebar").style.left = "-260px";
+  document.getElementById("overlay").style.display = "none";
 }
 
-/* CARDS */
-#contenedor{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:20px;
-  padding:20px;
-}
+</script>
 
-.card{
-  width:260px;
-  background:white;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,0.15);
-}
-
-.card img{
-  width:100%;
-  height:200px;
-  object-fit:cover;
-}
-
-.info{
-  padding:15px;
-  text-align:center;
-}
-
-.nombre{
-  font-size:18px;
-  font-weight:bold;
-}
-
-.telefono{
-  color:#666;
-  margin-top:5px;
-}
-
-.btn{
-  display:inline-block;
-  margin-top:12px;
-  padding:10px 20px;
-  background:green;
-  color:white;
-  border-radius:50px;
+<!-- Lógica de sincronización separada -->
+<script src="client-sync.js"></script>
   text-decoration:none;
 }
 </style>

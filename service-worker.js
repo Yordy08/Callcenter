@@ -47,6 +47,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Evitar cachear peticiones API/JSON o cuando se incluye nocache en params
+  const acceptHeader = request.headers.get('accept') || '';
+  const isApiJson = acceptHeader.includes('application/json');
+  const hasNoCacheParam = url.searchParams.has('nocache');
+  if (isApiJson || hasNoCacheParam) {
+    event.respondWith((async () => fetch(request, { cache: 'no-store' }))());
+    return;
+  }
+
   // For navigations (HTML), go network-first to reflect changes quickly.
   if (isNavigationRequest(request)) {
     event.respondWith(
