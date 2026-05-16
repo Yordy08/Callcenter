@@ -354,7 +354,24 @@ function renderContacts(data){
     return;
   }
 
-  data.forEach(c => {
+ const recentCalls = JSON.parse(
+  localStorage.getItem("recent_calls_order")
+) || [];
+
+/* ordenar: los llamados recientemente van arriba */
+data.sort((a, b) => {
+  const aIndex = recentCalls.indexOf(String(a.id));
+  const bIndex = recentCalls.indexOf(String(b.id));
+
+  if (aIndex === -1 && bIndex === -1) return 0;
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+
+  return aIndex - bIndex;
+});
+
+data.forEach(c => {
+
     contenedor.innerHTML += `
       <div class="card">
         <img src="${c.imagen}" alt="${c.nombre}">
@@ -363,9 +380,13 @@ function renderContacts(data){
           <div class="nombre">${c.nombre}</div>
           <div class="telefono">${c.telefono}</div>
 
-          <a class="btn" href="tel:+57${c.telefono}">
-            📞 Llamar
-          </a>
+         <a 
+  class="btn" 
+  href="tel:+57${c.telefono}"
+  onclick="saveRecentCall('${c.id}')"
+>
+  📞 Llamar
+</a>
         </div>
       </div>
     `;
