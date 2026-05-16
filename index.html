@@ -127,13 +127,6 @@ header{
   border-radius:18px;
   overflow:hidden;
   box-shadow:0 10px 25px rgba(0,0,0,0.15);
-  transform: translateZ(0);
-  animation: cardIn 420ms ease-out both;
-}
-
-@keyframes cardIn{
-  from{ opacity:0; transform: translateY(10px); }
-  to{ opacity:1; transform: translateY(0); }
 }
 
 .card img{
@@ -141,35 +134,6 @@ header{
   height:200px;
   object-fit:cover;
 }
-
-/* MOBILE */
-@media (max-width: 520px){
-  header{
-    padding:12px 12px;
-  }
-
-  .sidebar{
-    width: 230px;
-  }
-
-  .card{
-    width: 92vw;
-    max-width: 360px;
-  }
-
-  .card img{
-    height: 170px;
-  }
-
-  #contenedor{
-    padding: 14px 10px;
-    gap: 14px;
-  }
-
-  .nombre{
-    font-size: 16px;
-  }
-
 
 .info{
   padding:15px;
@@ -306,27 +270,34 @@ function loadList(){
     }catch(e){}
   }
 
-  // 2) Intentar cargar desde Google usando JSONP (evita CORS)
+  // 2) Intentar cargar desde Google (si hay internet)
   syncNow();
 }
-
 
 
 function syncNow(){
   if(!navigator.onLine) return;
 
-  const url = `${scriptURL}?action=list&callback=renderContacts&nocache=${Date.now()}`;
+  const url = `${scriptURL}?action=list&nocache=${Date.now()}`;
 
-  const script = document.createElement('script');
-  script.src = url;
-  script.async = true;
-
-  // Por si falla, dejamos lo que ya se mostró desde localStorage
-  script.onerror = () => {};
-
-  document.body.appendChild(script);
+  // Evitar caché vieja en fetch (y forzar revalidación)
+  fetch(url, { cache: 'no-store' })
+    .then(res => {
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(payload => {
+      // tu backend devuelve {ok:true,data:[...]}
+      if(payload && payload.ok && payload.data){
+        renderContacts(payload.data);
+        return;
+      }
+      renderContacts(payload);
+    })
+    .catch(() => {
+      // si falla dejamos lo que ya se mostró desde localStorage
+    });
 }
-
 
 
 function renderContacts(data){
@@ -357,11 +328,10 @@ function renderContacts(data){
 
 loadList();
 
-// Service Worker desactivado temporalmente (fix urgente para Chrome)
-// if ('serviceWorker' in navigator) {
-//   navigator.serviceWorker.register('service-worker.js').catch(() => {});
-// }
-
+// Registrar Service Worker para evitar código/recursos viejos
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
 
 window.addEventListener('online', () => syncNow());
 
