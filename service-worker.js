@@ -23,6 +23,8 @@ function isNavigationRequest(request) {
   return request.mode === 'navigate' || (request.destination === '' && request.method === 'GET');
 }
 
+const OFFLINE_URL = '/offline.html';
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -39,6 +41,8 @@ self.addEventListener('fetch', (event) => {
         } catch (err) {
           const cached = await caches.match(request);
           if (cached) return cached;
+          const offline = await caches.match(OFFLINE_URL);
+          if (offline) return offline;
           throw err;
         }
       })()
