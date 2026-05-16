@@ -127,6 +127,13 @@ header{
   border-radius:18px;
   overflow:hidden;
   box-shadow:0 10px 25px rgba(0,0,0,0.15);
+  transform: translateZ(0);
+  animation: cardIn 420ms ease-out both;
+}
+
+@keyframes cardIn{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
 }
 
 .card img{
@@ -134,6 +141,41 @@ header{
   height:200px;
   object-fit:cover;
 }
+
+/* MOBILE */
+@media (max-width: 520px){
+  header{
+    padding:12px 12px;
+  }
+
+  .sidebar{
+    width: 230px;
+  }
+
+  .card{
+    width: 92vw;
+    max-width: 360px;
+  }
+
+  .card img{
+    height: 170px;
+  }
+
+  #contenedor{
+    padding: 14px 10px;
+    gap: 14px;
+  }
+
+  .nombre{
+    font-size: 16px;
+  }
+
+  .telefono{
+    font-size: 14px;
+  }
+}
+
+
 
 .info{
   padding:15px;
