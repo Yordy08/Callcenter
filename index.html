@@ -270,34 +270,27 @@ function loadList(){
     }catch(e){}
   }
 
-  // 2) Intentar cargar desde Google (si hay internet)
+  // 2) Intentar cargar desde Google usando JSONP (evita CORS)
   syncNow();
 }
+
 
 
 function syncNow(){
   if(!navigator.onLine) return;
 
-  const url = `${scriptURL}?action=list&nocache=${Date.now()}`;
+  const url = `${scriptURL}?action=list&callback=renderContacts&nocache=${Date.now()}`;
 
-  // Evitar caché vieja en fetch (y forzar revalidación)
-  fetch(url, { cache: 'no-store' })
-    .then(res => {
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    })
-    .then(payload => {
-      // tu backend devuelve {ok:true,data:[...]}
-      if(payload && payload.ok && payload.data){
-        renderContacts(payload.data);
-        return;
-      }
-      renderContacts(payload);
-    })
-    .catch(() => {
-      // si falla dejamos lo que ya se mostró desde localStorage
-    });
+  const script = document.createElement('script');
+  script.src = url;
+  script.async = true;
+
+  // Por si falla, dejamos lo que ya se mostró desde localStorage
+  script.onerror = () => {};
+
+  document.body.appendChild(script);
 }
+
 
 
 function renderContacts(data){
