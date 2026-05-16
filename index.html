@@ -271,8 +271,14 @@ function loadList(){
   }
 
   // 2) Intentar cargar desde Google (si hay internet)
+  // Nota: hacemos sync también al reconectar (ver listener abajo)
   syncNow();
+
+  // 3) Además reintentar un par de veces (a veces el primer fetch al reconectar falla)
+  setTimeout(syncNow, 2000);
+  setTimeout(syncNow, 5000);
 }
+
 
 
 function syncNow(){

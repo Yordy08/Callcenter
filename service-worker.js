@@ -1,5 +1,6 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `callcenter-cache-${CACHE_VERSION}`;
+
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -28,6 +29,23 @@ const OFFLINE_URL = '/offline.html';
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+
+  // Nunca cachear el backend de Apps Script (evita que celulares vean datos viejos)
+  // endpoint: https://script.google.com/macros/s/<id>/exec
+  const url = new URL(request.url);
+  const isAppsScriptEndpoint =
+    url.hostname === 'script.google.com' &&
+    url.pathname.includes('/macros/s/') &&
+    url.pathname.endsWith('/exec');
+
+  if (isAppsScriptEndpoint) {
+    event.respondWith(
+      (async () => {
+        return fetch(request, { cache: 'no-store' });
+      })()
+    );
+    return;
+  }
 
   // For navigations (HTML), go network-first to reflect changes quickly.
   if (isNavigationRequest(request)) {
@@ -63,4 +81,5 @@ self.addEventListener('fetch', (event) => {
     })()
   );
 });
+
 
