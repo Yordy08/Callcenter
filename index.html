@@ -208,7 +208,6 @@ header{
 </div>
 
 <div id="contenedor"></div>
-
 <script>
 let menuUnlocked = false;
 let loginTimer = null;
@@ -236,11 +235,9 @@ function checkMenu(){
 
   if(pass === "admin"){
     menuUnlocked = true;
-
     clearTimeout(loginTimer);
     document.getElementById("menuLogin").style.display = "none";
     showMenu();
-
   }else{
     document.getElementById("error").innerText = "Contraseña incorrecta";
   }
@@ -262,6 +259,7 @@ function closeMenu(){
   document.getElementById("overlay").style.display = "none";
 }
 
+
 /* =========================
    API
 ========================= */
@@ -270,13 +268,12 @@ const scriptURL =
 "https://script.google.com/macros/s/AKfycbxCOhWQ4FkMckemEFyKaR6WLyJEXcHafbhyGdBXixL5s28DkuHMkK29jiGKG0jeybm9/exec";
 
 const CONTACTS_CACHE_KEY = "contacts_cache_v3";
+const RECENT_CALLS_KEY = "recent_calls_order";
 
 /* cargar lista */
 function loadList(){
-
   document.getElementById("loading").style.display = "block";
 
-  // mostrar cache local primero
   const cached = localStorage.getItem(CONTACTS_CACHE_KEY);
 
   if(cached){
@@ -287,12 +284,11 @@ function loadList(){
     }
   }
 
-  // sincronizar online
   syncNow();
 }
 
 
-/* JSONP SIN CORS */
+/* JSONP */
 function syncNow(){
 
   if(!navigator.onLine){
@@ -330,6 +326,41 @@ function handleContacts(data){
 }
 
 
+/* guardar llamada reciente */
+function saveRecentCall(id, telefono){
+
+  let recentCalls = JSON.parse(
+    localStorage.getItem(RECENT_CALLS_KEY)
+  ) || [];
+
+  // eliminar duplicado si existe
+  recentCalls = recentCalls.filter(item => item !== String(id));
+
+  // poner de primero
+  recentCalls.unshift(String(id));
+
+  // limitar historial
+  recentCalls = recentCalls.slice(0, 50);
+
+  localStorage.setItem(
+    RECENT_CALLS_KEY,
+    JSON.stringify(recentCalls)
+  );
+
+  // recargar lista inmediatamente
+  const cached = localStorage.getItem(CONTACTS_CACHE_KEY);
+
+  if(cached){
+    renderContacts(JSON.parse(cached));
+  }
+
+  // abrir llamada después
+  setTimeout(() => {
+    window.location.href = `tel:+57${telefono}`;
+  }, 300);
+}
+
+
 /* render */
 function renderContacts(data){
 
@@ -354,24 +385,23 @@ function renderContacts(data){
     return;
   }
 
- const recentCalls = JSON.parse(
-  localStorage.getItem("recent_calls_order")
-) || [];
+  const recentCalls = JSON.parse(
+    localStorage.getItem(RECENT_CALLS_KEY)
+  ) || [];
 
-/* ordenar: los llamados recientemente van arriba */
-data.sort((a, b) => {
-  const aIndex = recentCalls.indexOf(String(a.id));
-  const bIndex = recentCalls.indexOf(String(b.id));
+  /* ordenar recientes primero */
+  data.sort((a, b) => {
+    const aIndex = recentCalls.indexOf(String(a.id));
+    const bIndex = recentCalls.indexOf(String(b.id));
 
-  if (aIndex === -1 && bIndex === -1) return 0;
-  if (aIndex === -1) return 1;
-  if (bIndex === -1) return -1;
+    if(aIndex === -1 && bIndex === -1) return 0;
+    if(aIndex === -1) return 1;
+    if(bIndex === -1) return -1;
 
-  return aIndex - bIndex;
-});
+    return aIndex - bIndex;
+  });
 
-data.forEach(c => {
-
+  data.forEach(c => {
     contenedor.innerHTML += `
       <div class="card">
         <img src="${c.imagen}" alt="${c.nombre}">
@@ -380,13 +410,12 @@ data.forEach(c => {
           <div class="nombre">${c.nombre}</div>
           <div class="telefono">${c.telefono}</div>
 
-         <a 
-  class="btn" 
-  href="tel:+57${c.telefono}"
-  onclick="saveRecentCall('${c.id}')"
->
-  📞 Llamar
-</a>
+          <button 
+            class="btn"
+            onclick="saveRecentCall('${c.id}','${c.telefono}')"
+          >
+            📞 Llamar
+          </button>
         </div>
       </div>
     `;
@@ -394,13 +423,13 @@ data.forEach(c => {
 }
 
 
-/* cuando vuelve internet */
+/* vuelve internet */
 window.addEventListener("online", () => {
   syncNow();
 });
 
 
-/* actualizar service worker */
+/* service worker */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(reg => reg.update());
@@ -413,6 +442,5 @@ window.onload = function(){
   loadList();
 };
 </script>
-
 </body>
 </html>
