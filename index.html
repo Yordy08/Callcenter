@@ -270,19 +270,35 @@ function loadList(){
     }catch(e){}
   }
 
-  // 2) Intentar cargar desde Google (cuando Chrome lo permita)
-  const old = document.getElementById("jsonp");
-  if(old) old.remove();
-
-  const script = document.createElement("script");
-  script.id = "jsonp";
-  script.src = `${scriptURL}?action=list&callback=renderContacts`;
-  script.onerror = () => {
-    // Si falla, dejamos lo que ya se mostró desde caché.
-  };
-
-  document.body.appendChild(script);
+  // 2) Intentar cargar desde Google (si hay internet)
+  syncNow();
 }
+
+
+function syncNow(){
+  if(!navigator.onLine) return;
+
+  const url = `${scriptURL}?action=list&nocache=${Date.now()}`;
+
+  // Evitar caché vieja en fetch (y forzar revalidación)
+  fetch(url, { cache: 'no-store' })
+    .then(res => {
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(payload => {
+      // tu backend devuelve {ok:true,data:[...]}
+      if(payload && payload.ok && payload.data){
+        renderContacts(payload.data);
+        return;
+      }
+      renderContacts(payload);
+    })
+    .catch(() => {
+      // si falla dejamos lo que ya se mostró desde localStorage
+    });
+}
+
 
 function renderContacts(data){
   // Guardar para offline
@@ -312,7 +328,15 @@ function renderContacts(data){
 
 loadList();
 
+// Registrar Service Worker para evitar código/recursos viejos
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+
+window.addEventListener('online', () => syncNow());
+
 </script>
+
 
 </body>
 </html>
