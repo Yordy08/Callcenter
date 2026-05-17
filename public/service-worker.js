@@ -6,8 +6,9 @@ const STATIC_FILES = [
   "/",
   "/offline.html",
   "/manifest.json",
-  "/public/icons/circulo.avif"
+  "/icons/logo.png"
 ];
+
 
 // INSTALAR
 self.addEventListener("install", (event) => {
