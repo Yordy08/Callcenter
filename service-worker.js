@@ -6,8 +6,7 @@ const STATIC_FILES = [
   "/",
   "/offline.html",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/public/icons/circulo.avif"
 ];
 
 // INSTALAR
