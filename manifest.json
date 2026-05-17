@@ -7,7 +7,7 @@
   "theme_color": "#00c853",
   "icons": [
     {
-      "src": "/public/icons/circulo.avif",
+      "src": "/icons/circulo.avif",
       "sizes": "512x512",
       "type": "image/avif"
     }
