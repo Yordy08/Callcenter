@@ -4,7 +4,6 @@ const OFFLINE_URL = "/offline.html";
 
 const STATIC_FILES = [
   "/",
-  "/index.html",
   "/offline.html",
   "/manifest.json",
   "/icons/icon-192.png",
