@@ -1,94 +1,136 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `callcenter-cache-${CACHE_VERSION}`;
+const OFFLINE_URL = "/offline.html";
 
+const STATIC_FILES = [
+  "/",
+  "/index.html",
+  "/offline.html",
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png"
+];
 
-self.addEventListener('install', (event) => {
+// INSTALAR
+self.addEventListener("install", (event) => {
   self.skipWaiting();
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_FILES);
+    })
+  );
 });
 
-self.addEventListener('activate', (event) => {
+// ACTIVAR
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
+
       await Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       );
+
       await self.clients.claim();
     })()
   );
 });
 
+// Detectar navegación HTML
 function isNavigationRequest(request) {
-  return request.mode === 'navigate' || (request.destination === '' && request.method === 'GET');
+  return (
+    request.mode === "navigate" ||
+    (request.destination === "" && request.method === "GET")
+  );
 }
 
-const OFFLINE_URL = '/offline.html';
+// FETCH
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
+  if (request.method !== "GET") return;
 
-  // Nunca cachear el backend de Apps Script (evita que celulares vean datos viejos)
-  // endpoint: https://script.google.com/macros/s/<id>/exec
   const url = new URL(request.url);
+
+  // NO cachear Apps Script
   const isAppsScriptEndpoint =
-    url.hostname === 'script.google.com' &&
-    url.pathname.includes('/macros/s/') &&
-    url.pathname.endsWith('/exec');
+    url.hostname === "script.google.com" &&
+    url.pathname.includes("/macros/s/") &&
+    url.pathname.endsWith("/exec");
 
   if (isAppsScriptEndpoint) {
     event.respondWith(
-      (async () => {
-        return fetch(request, { cache: 'no-store' });
-      })()
+      fetch(request, {
+        cache: "no-store"
+      })
     );
     return;
   }
 
-  // Evitar cachear peticiones API/JSON o cuando se incluye nocache en params
-  const acceptHeader = request.headers.get('accept') || '';
-  const isApiJson = acceptHeader.includes('application/json');
-  const hasNoCacheParam = url.searchParams.has('nocache');
+  // NO cachear JSON/API
+  const acceptHeader = request.headers.get("accept") || "";
+  const isApiJson = acceptHeader.includes("application/json");
+  const hasNoCacheParam = url.searchParams.has("nocache");
+
   if (isApiJson || hasNoCacheParam) {
-    event.respondWith((async () => fetch(request, { cache: 'no-store' }))());
+    event.respondWith(
+      fetch(request, {
+        cache: "no-store"
+      })
+    );
     return;
   }
 
-  // For navigations (HTML), go network-first to reflect changes quickly.
+  // HTML → network first
   if (isNavigationRequest(request)) {
     event.respondWith(
       (async () => {
         try {
           const fresh = await fetch(request);
+
           const cache = await caches.open(CACHE_NAME);
-          await cache.put(request, fresh.clone());
+          cache.put(request, fresh.clone());
+
           return fresh;
-        } catch (err) {
+        } catch (error) {
           const cached = await caches.match(request);
+
           if (cached) return cached;
+
           const offline = await caches.match(OFFLINE_URL);
+
           if (offline) return offline;
-          throw err;
+
+          throw error;
         }
       })()
     );
+
     return;
   }
 
-  // For everything else: cache-first.
+  // Archivos estáticos → cache first
   event.respondWith(
     (async () => {
       const cached = await caches.match(request);
+
       if (cached) return cached;
 
-      const fresh = await fetch(request);
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, fresh.clone()).catch(() => {});
-      return fresh;
+      try {
+        const fresh = await fetch(request);
+
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, fresh.clone());
+
+        return fresh;
+      } catch (error) {
+        console.log("Error fetch:", error);
+      }
     })()
   );
 });
-
-

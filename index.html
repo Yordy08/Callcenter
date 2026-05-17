@@ -8,9 +8,12 @@
 >
 <title>Contactos</title>
 
-<link rel="icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp">
-<link rel="apple-touch-icon" href="https://png.pngtree.com/png-vector/20250917/ourmid/pngtree-3d-red-phone-call-icon-hang-up-or-end-symbol-png-image_17482051.webp">
+
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00c853">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <style>
 body{
@@ -429,10 +432,16 @@ window.addEventListener("online", () => {
 });
 
 
-/* service worker */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.update());
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((reg) => {
+        console.log("Service Worker registrado:", reg);
+      })
+      .catch((err) => {
+        console.log("Error registrando SW:", err);
+      });
   });
 }
 

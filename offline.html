@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0"
+  >
+  
+  <title>Sin conexión</title>
+
+  <meta name="theme-color" content="#00c853">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      color: #00c853;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    button {
+      margin-top: 20px;
+      background: #00c853;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Sin conexión</h1>
+
+    <p>No tienes internet en este momento.</p>
+    <p>Intentaremos abrir tu aplicación con los datos guardados.</p>
+
+    <button onclick="goToApp()">
+      Abrir aplicación
+    </button>
+
+    <div class="status" id="status">
+      Verificando conexión...
+    </div>
+  </div>
+
+  <script>
+    function goToApp() {
+      window.location.href = "/";
+    }
+
+    // Intentar volver automáticamente a la app principal
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 3000);
+
+    // Detectar si vuelve internet
+    window.addEventListener("online", () => {
+      document.getElementById("status").innerText =
+        "Conexión restaurada. Redirigiendo...";
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+    });
+
+    window.addEventListener("offline", () => {
+      document.getElementById("status").innerText =
+        "Sigues sin conexión.";
+    });
+  </script>
+
+</body>
+</html>

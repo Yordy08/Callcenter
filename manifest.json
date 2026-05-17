@@ -7,15 +7,14 @@
   "theme_color": "#00c853",
   "icons": [
     {
-      "src": "https://png.pngtree.com/png-clipart/20250417/original/pngtree-clean-and-professional-white-phone-call-icon-with-a-red-receiver-png-image_20715091.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://png.pngtree.com/png-clipart/20250417/original/pngtree-clean-and-professional-white-phone-call-icon-with-a-red-receiver-png-image_20715091.png",
+      "src": "/public/icons/circulo.avif",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
-
