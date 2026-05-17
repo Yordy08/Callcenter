@@ -12,8 +12,8 @@
 
 <link rel="manifest" href="/manifest.json">
 
-<link rel="icon" href="/public/icons/logo.png">
-<link rel="apple-touch-icon" href="/public/icons/logo.png">
+<link rel="icon" href="/icons/logo.png">
+<link rel="apple-touch-icon" href="/icons/logo.png">
 
 <meta name="theme-color" content="#00c853">
 <meta name="mobile-web-app-capable" content="yes">
@@ -237,6 +237,13 @@ function openMenu(){
     closeLogin();
   }, 5000);
 }
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log("PWA instalable detectada");
+});
 
 function checkMenu(){
   const pass = document.getElementById("pass").value;
